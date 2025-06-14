@@ -30,28 +30,6 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           role-session-name: GitHub-Actions-Deploy
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.7.1
-
-      - name: Terraform Init
-        working-directory: ./terraform
-        run: |
-          terraform init \
-            -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" \
-            -backend-config="key=terraform.tfstate" \
-            -backend-config="region=${{ env.AWS_REGION }}" \
-            -backend-config="encrypt=true"
-
-      - name: Terraform Plan
-        working-directory: ./terraform
-        run: terraform plan -no-color -var-file="terraform.tfvars"
-
-      - name: Terraform Apply
-        working-directory: ./terraform
-        run: terraform apply -auto-approve -var-file="terraform.tfvars"
-
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
