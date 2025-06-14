@@ -1,27 +1,23 @@
-variable "region" {
-  description = "AWS region where to create resources"
+variable "aws_region" {
+  description = "AWS region"
   type        = string
-  default     = "us-west-2"
+  default     = "us-east-1"
 }
 
 variable "project_name" {
-  description = "Name of your project (will be used in resource names)"
+  description = "Name of the project"
   type        = string
-  
-  validation {
-    condition     = can(regex("^[a-z0-9-]+$", var.project_name))
-    error_message = "Project name must contain only lowercase letters, numbers, and hyphens."
-  }
+  default     = "simple-api"
 }
 
-variable "github_org" {
-  description = "GitHub organization or username"
+variable "environment" {
+  description = "Environment (e.g., dev, staging, prod)"
   type        = string
-  default     = ""
+  default     = "prod"
 }
 
-variable "github_repo" {
-  description = "GitHub repository name"
-  type        = string
-  default     = ""
+variable "container_port" {
+  description = "Port on which the container runs"
+  type        = number
+  default     = 8000
 } 
