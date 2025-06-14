@@ -2,11 +2,26 @@ import os
 from datetime import datetime
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
     title="Simple Backend API",
     description="A simple FastAPI backend deployed on ECS",
     version="1.0.0",
+)
+
+# Add CORS middleware to allow frontend calls
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",  # React dev server
+        "http://localhost:5173",  # Vite dev server (if using Vite)
+        # Add your frontend domain here when deployed
+        # "https://yourdomain.com",
+    ],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["*"],
 )
 
 
@@ -31,7 +46,7 @@ async def get_users():
         "users": [
             {"id": 1, "name": "Alice", "email": "alice@example.com"},
             {"id": 2, "name": "Bob", "email": "bob@example.com"},
-            {"id": 3, "name": "Lubhna", "email": "charlie@example.com"},
+            {"id": 3, "name": "Lubhna", "email": "lubhna@example.com"},  # Fixed name
         ]
     }
 
@@ -43,7 +58,7 @@ async def get_user(user_id: int):
         users = {
             1: {"id": 1, "name": "Alice", "email": "alice@example.com"},
             2: {"id": 2, "name": "Bob", "email": "bob@example.com"},
-            3: {"id": 3, "name": "Charlie", "email": "charlie@example.com"},
+            3: {"id": 3, "name": "Lubhna", "email": "lubhna@example.com"},  # Fixed name
         }
         return users[user_id]
     return {"error": "User not found"}

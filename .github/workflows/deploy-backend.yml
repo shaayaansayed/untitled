@@ -1,8 +1,9 @@
-name: Deploy to ECS
+name: Deploy Backend to ECS
 
 on:
   push:
     branches: [main]
+    paths: ["backend/**"]
 
 env:
   AWS_REGION: us-east-1
@@ -12,7 +13,7 @@ env:
 
 jobs:
   deploy:
-    name: Deploy
+    name: Deploy Backend
     runs-on: ubuntu-latest
     environment: production
 
@@ -38,8 +39,8 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
         run: |
           # Build a docker container and push it to ECR
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./app
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest ./app
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./backend
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest ./backend
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
