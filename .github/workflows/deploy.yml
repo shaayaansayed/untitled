@@ -46,11 +46,11 @@ jobs:
 
       - name: Terraform Plan
         working-directory: ./terraform
-        run: terraform plan -no-color
+        run: terraform plan -no-color -var-file="terraform.tfvars"
 
       - name: Terraform Apply
         working-directory: ./terraform
-        run: terraform apply -auto-approve
+        run: terraform apply -auto-approve -var-file="terraform.tfvars"
 
       - name: Login to Amazon ECR
         id: login-ecr
