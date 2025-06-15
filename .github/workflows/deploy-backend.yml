@@ -7,9 +7,9 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  ECR_REPOSITORY: simple-api-prod
-  ECS_SERVICE: simple-api-prod
-  ECS_CLUSTER: simple-api-prod
+  ECR_REPOSITORY: untitled-prod # Changed from simple-api-prod
+  ECS_SERVICE: untitled-prod # Changed from simple-api-prod
+  ECS_CLUSTER: untitled-prod # Changed from simple-api-prod
 
 jobs:
   deploy:
