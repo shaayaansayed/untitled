@@ -7,8 +7,8 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  S3_BUCKET: untitled-frontend-prod
-  CLOUDFRONT_DISTRIBUTION_ID: E109QVYY0ZMF3J
+  S3_BUCKET: untitled-frontend-prod # This should match your terraform output
+  CLOUDFRONT_DISTRIBUTION_ID: # You'll need to get this from terraform output
 
 jobs:
   deploy:
@@ -24,8 +24,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "18"
-          cache: "npm"
-          cache-dependency-path: frontend/package-lock.json
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
