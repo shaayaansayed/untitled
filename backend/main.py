@@ -17,7 +17,6 @@ app.add_middleware(
         "http://localhost:3000",  # React dev server
         "http://localhost:5173",  # Vite dev server (if using Vite)
         # Add your frontend domain here when deployed
-        # "https://yourdomain.com",
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE"],
