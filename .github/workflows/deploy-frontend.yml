@@ -47,9 +47,3 @@ jobs:
         working-directory: frontend
         run: |
           aws s3 sync dist/ s3://$S3_BUCKET --delete --exact-timestamps
-
-      - name: Invalidate CloudFront
-        run: |
-          aws cloudfront create-invalidation \
-            --distribution-id $CLOUDFRONT_DISTRIBUTION_ID \
-            --paths "/*"
