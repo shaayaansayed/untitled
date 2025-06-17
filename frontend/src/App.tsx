@@ -71,7 +71,6 @@ function App() {
 
       <h1 className="text-5xl font-bold leading-tight mb-8">Vite + React</h1>
 
-      {/* API Configuration Info */}
       <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg mb-6">
         <h3 className="text-lg font-semibold mb-2">API Configuration</h3>
         <p className="text-sm text-gray-600 dark:text-gray-400">
