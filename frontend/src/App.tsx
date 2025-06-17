@@ -31,11 +31,9 @@ function App() {
     setError(null);
 
     try {
-      // Test health endpoint
       const health = (await apiClient.getHealth()) as HealthResponse;
       setHealthStatus(health);
 
-      // Get users
       const response = (await apiClient.getUsers()) as ApiResponse;
       setUsers(response.users);
     } catch (err) {
