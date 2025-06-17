@@ -7,9 +7,9 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  S3_BUCKET: untitled-frontend-prod # This should match your terraform output
-  CLOUDFRONT_DISTRIBUTION_ID: # You'll need to get this from terraform output
-  # Note: BACKEND_URL should be set as a GitHub repository variable
+  S3_BUCKET: untitled-frontend-prod
+  CLOUDFRONT_DISTRIBUTION_ID: E109QVYY0ZMF3J
+  BACKEND_URL: http://untitled-prod-849734779.us-east-1.elb.amazonaws.com
 
 jobs:
   deploy:
@@ -36,7 +36,7 @@ jobs:
       # Log the backend URL for debugging
       - name: Display backend URL
         run: |
-          echo "Using backend URL: ${{ secrets.BACKEND_URL }}"
+          echo "Using backend URL: ${{ env.BACKEND_URL }}"
 
       - name: Install dependencies
         working-directory: frontend
@@ -48,9 +48,17 @@ jobs:
         env:
           NODE_ENV: production
           # Use backend URL from GitHub variables
-          VITE_API_BASE_URL: ${{ secrets.BACKEND_URL }}
+          VITE_API_BASE_URL: ${{ env.BACKEND_URL }}
 
       - name: Deploy to S3
         working-directory: frontend
         run: |
           aws s3 sync dist/ s3://$S3_BUCKET --delete --exact-timestamps
+
+      - name: Invalidate CloudFront cache
+        run: |
+          echo "Creating CloudFront invalidation for distribution: ${{ env.CLOUDFRONT_DISTRIBUTION_ID }}"
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ env.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*"
+          echo "CloudFront invalidation created successfully"
