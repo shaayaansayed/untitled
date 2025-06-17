@@ -9,6 +9,7 @@ env:
   AWS_REGION: us-east-1
   S3_BUCKET: untitled-frontend-prod # This should match your terraform output
   CLOUDFRONT_DISTRIBUTION_ID: # You'll need to get this from terraform output
+  # Note: BACKEND_URL should be set as a GitHub repository variable
 
 jobs:
   deploy:
@@ -32,6 +33,11 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
+      # Log the backend URL for debugging
+      - name: Display backend URL
+        run: |
+          echo "Using backend URL: ${{ secrets.BACKEND_URL }}"
+
       - name: Install dependencies
         working-directory: frontend
         run: npm install
@@ -40,8 +46,9 @@ jobs:
         working-directory: frontend
         run: npm run build
         env:
-          # Add any build-time environment variables here
           NODE_ENV: production
+          # Use backend URL from GitHub variables
+          VITE_API_BASE_URL: ${{ secrets.BACKEND_URL }}
 
       - name: Deploy to S3
         working-directory: frontend
