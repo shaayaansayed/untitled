@@ -1,4 +1,3 @@
-# Backend outputs
 output "ecr_repository_url" {
   description = "URL of the ECR repository"
   value       = aws_ecr_repository.app_repo.repository_url
@@ -19,7 +18,6 @@ output "cloudwatch_log_group_name" {
   value       = aws_cloudwatch_log_group.app.name
 }
 
-# Frontend outputs
 output "frontend_s3_bucket_name" {
   description = "Name of the S3 bucket for frontend"
   value       = aws_s3_bucket.frontend.bucket
@@ -43,4 +41,30 @@ output "frontend_cloudfront_distribution_id" {
 output "frontend_url" {
   description = "Frontend URL (via CloudFront)"
   value       = "https://${aws_cloudfront_distribution.frontend.domain_name}"
-} 
+}
+
+output "files_s3_bucket_name" {
+  description = "Name of the S3 bucket for files"
+  value       = aws_s3_bucket.files.bucket
+}
+
+output "files_s3_bucket_arn" {
+  description = "ARN of the S3 bucket for files"
+  value       = aws_s3_bucket.files.arn
+}
+
+output "files_s3_bucket_domain_name" {
+  description = "Domain name of the S3 bucket for files"
+  value       = aws_s3_bucket.files.bucket_domain_name
+}
+
+output "database_endpoint" {
+  description = "RDS instance endpoint"
+  value       = aws_db_instance.main.endpoint
+  sensitive   = true
+}
+
+output "database_name" {
+  description = "Database name"
+  value       = aws_db_instance.main.db_name
+}

@@ -1,16 +1,53 @@
-import os
-from datetime import datetime
-
+from database import Base, engine
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.utils import get_openapi
+from routes import files, prior_auth, questions
+
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="Simple Backend API",
-    description="A simple FastAPI backend deployed on ECS",
+    title="Prior Authorization API",
+    description="""
+    ## Prior Authorization Management System
+    
+    This API provides comprehensive functionality for managing prior authorization requests in healthcare settings.
+    
+    ### Features:
+    - **Prior Authorizations**: Create, read, update, and delete prior authorization requests
+    - **File Management**: Upload and manage PDF documents using AWS S3
+    - **Medical Necessity Questions**: Handle medical necessity questionnaires
+    
+    ### Authentication:
+    Currently, this API does not require authentication for development purposes.
+    
+    ### File Upload:
+    - Only PDF files are accepted
+    - Maximum file size: 10MB
+    - Files are stored securely in AWS S3
+    
+    ### API Endpoints:
+    - `/api/prior-authorizations` - Manage prior authorization requests
+    - `/api/files` - Handle file uploads and downloads
+    - `/api/prior-authorizations/{id}/questions` - Manage medical necessity questions
+    """,
     version="1.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
+    swagger_ui_parameters={
+        "defaultModelsExpandDepth": -1,
+        "defaultModelExpandDepth": 3,
+        "displayRequestDuration": True,
+        "docExpansion": "list",
+        "filter": True,
+        "showExtensions": True,
+        "showCommonExtensions": True,
+        "tryItOutEnabled": True,
+    },
 )
 
-# Add CORS middleware to allow frontend calls
+# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -23,41 +60,61 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Include routers
+app.include_router(
+    prior_auth.router, prefix="/api/prior-authorizations", tags=["prior-authorizations"]
+)
+app.include_router(files.router, prefix="/api/files", tags=["files"])
+app.include_router(questions.router, prefix="/api", tags=["questions"])
 
-@app.get("/")
-async def root():
+
+# Custom OpenAPI schema
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+
+    openapi_schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        description=app.description,
+        routes=app.routes,
+    )
+
+    # Add custom info
+    openapi_schema["info"]["x-logo"] = {
+        "url": "https://fastapi.tiangolo.com/img/logo-margin/logo-teal.png"
+    }
+
+    # Add server information
+    openapi_schema["servers"] = [
+        {"url": "http://localhost:8000", "description": "Development server"},
+        {"url": "https://api.yourdomain.com", "description": "Production server"},
+    ]
+
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+
+app.openapi = custom_openapi
+
+
+# Health check
+@app.get("/health", tags=["health"])
+def health_check():
+    """
+    Health check endpoint to verify the API is running.
+
+    Returns:
+        dict: Status information about the API
+    """
     return {
-        "message": "Hello from FastAPI on ECS!",
-        "timestamp": datetime.now().isoformat(),
-        "environment": os.getenv("ENVIRONMENT", "unknown"),
+        "status": "healthy",
+        "version": "1.0.0",
+        "timestamp": "2024-01-01T00:00:00Z",
     }
 
 
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+if __name__ == "__main__":
+    import uvicorn
 
-
-@app.get("/api/users")
-async def get_users():
-    # Mock users data
-    return {
-        "users": [
-            {"id": 1, "name": "Alice", "email": "alice@example.com"},
-            {"id": 2, "name": "Bob", "email": "bob@example.com"},
-            {"id": 3, "name": "Lubhna", "email": "lubhna@example.com"},  # Fixed name
-        ]
-    }
-
-
-@app.get("/api/users/{user_id}")
-async def get_user(user_id: int):
-    # Mock user data
-    if user_id in [1, 2, 3]:
-        users = {
-            1: {"id": 1, "name": "Alice", "email": "alice@example.com"},
-            2: {"id": 2, "name": "Bob", "email": "bob@example.com"},
-            3: {"id": 3, "name": "Lubhna", "email": "lubhna@example.com"},  # Fixed name
-        }
-        return users[user_id]
-    return {"error": "User not found"}
+    uvicorn.run(app, host="0.0.0.0", port=8000)
