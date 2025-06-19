@@ -77,7 +77,7 @@ export const PriorAuthProvider: React.FC<{
       ]);
 
       // Create the prior authorization with the uploaded file IDs
-      const newPriorAuth = await apiClient.createPriorAuthorization({
+      await apiClient.createPriorAuthorization({
         patient_name: auth.patient_name,
         procedure: auth.procedure,
         auth_document_id: authDocUpload.id,
