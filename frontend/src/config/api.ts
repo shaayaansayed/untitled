@@ -4,7 +4,6 @@ const API_BASE_URL =
 
 export { API_BASE_URL };
 
-// Types
 export interface PriorAuth {
   id: string;
   patient_name: string;
