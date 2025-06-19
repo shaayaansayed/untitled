@@ -1,8 +1,17 @@
+import logging
+import os
+
 from database import Base, engine
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from routes import files, prior_auth, questions
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 Base.metadata.create_all(bind=engine)
 
@@ -88,6 +97,10 @@ def custom_openapi():
     # Add server information
     openapi_schema["servers"] = [
         {
+            "url": "http://localhost:8000",
+            "description": "Development server",
+        },
+        {
             "url": "http://untitled-prod-849734779.us-east-1.elb.amazonaws.com/",
             "description": "Production server",
         },
@@ -108,6 +121,19 @@ def health_check():
     Returns:
         dict: Status information about the API
     """
+    logger.info("Health check endpoint called")
+
+    # Log environment variables (masking sensitive data)
+    database_url = os.getenv("DATABASE_URL")
+    aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
+    aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+    s3_bucket_name = os.getenv("S3_BUCKET_NAME")
+
+    logger.info(f"DATABASE_URL: {database_url}")
+    logger.info(f"AWS_ACCESS_KEY_ID: {aws_access_key_id}")
+    logger.info(f"AWS_SECRET_ACCESS_KEY: {aws_secret_access_key}")
+    logger.info(f"S3_BUCKET_NAME: {s3_bucket_name}")
+
     return {
         "status": "healthy",
         "version": "1.0.0",
