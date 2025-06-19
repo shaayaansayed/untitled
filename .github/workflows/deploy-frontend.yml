@@ -9,7 +9,7 @@ env:
   AWS_REGION: us-east-1
   S3_BUCKET: untitled-frontend-prod
   CLOUDFRONT_DISTRIBUTION_ID: E109QVYY0ZMF3J
-  BACKEND_URL: http://untitled-prod-849734779.us-east-1.elb.amazonaws.com
+  BACKEND_URL: https://d336dx6lgggnqp.cloudfront.net
 
 jobs:
   deploy:

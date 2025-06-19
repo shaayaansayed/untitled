@@ -68,3 +68,18 @@ output "database_name" {
   description = "Database name"
   value       = aws_db_instance.main.db_name
 }
+
+output "backend_cloudfront_domain_name" {
+  description = "Domain name of the backend CloudFront distribution"
+  value       = aws_cloudfront_distribution.backend.domain_name
+}
+
+output "backend_cloudfront_distribution_id" {
+  description = "ID of the backend CloudFront distribution"
+  value       = aws_cloudfront_distribution.backend.id
+}
+
+output "backend_url" {
+  description = "Backend URL (via CloudFront)"
+  value       = "https://${aws_cloudfront_distribution.backend.domain_name}"
+}
