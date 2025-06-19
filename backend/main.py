@@ -98,7 +98,6 @@ def custom_openapi():
 app.openapi = custom_openapi
 
 
-# Health check
 @app.get("/health", tags=["health"])
 def health_check():
     """
