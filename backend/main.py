@@ -87,8 +87,10 @@ def custom_openapi():
 
     # Add server information
     openapi_schema["servers"] = [
-        {"url": "http://localhost:8000", "description": "Development server"},
-        {"url": "https://api.yourdomain.com", "description": "Production server"},
+        {
+            "url": "http://untitled-prod-849734779.us-east-1.elb.amazonaws.com/",
+            "description": "Production server",
+        },
     ]
 
     app.openapi_schema = openapi_schema
