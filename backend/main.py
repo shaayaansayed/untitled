@@ -102,7 +102,7 @@ def custom_openapi():
             "description": "Development server",
         },
         {
-            "url": "http://untitled-prod-849734779.us-east-1.elb.amazonaws.com/",
+            "url": "https://d336dx6lgggnqp.cloudfront.net/",
             "description": "Production server",
         },
     ]
