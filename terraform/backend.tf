@@ -202,6 +202,10 @@ resource "aws_ecs_task_definition" "app" {
         {
           name  = "ENVIRONMENT"
           value = var.environment
+        },
+        {
+          name  = "REDIS_URL"
+          value = "redis://${aws_elasticache_replication_group.redis.primary_endpoint_address}:6379/0"
         }
       ]
 
@@ -326,5 +330,89 @@ resource "aws_cloudfront_distribution" "backend" {
 
   viewer_certificate {
     cloudfront_default_certificate = true
+  }
+}
+
+# ECR repository for worker container images
+resource "aws_ecr_repository" "worker_repo" {
+  name                 = "${var.project_name}-worker-${var.environment}"
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = false
+  }
+}
+
+# CloudWatch log group for worker tasks
+resource "aws_cloudwatch_log_group" "worker" {
+  name              = "/ecs/${var.project_name}-worker-${var.environment}"
+  retention_in_days = 30
+
+  tags = {
+    Name        = "${var.project_name}-worker-${var.environment}"
+    Environment = var.environment
+  }
+}
+
+# ECS task definition for worker
+resource "aws_ecs_task_definition" "worker" {
+  family                   = "${var.project_name}-worker-${var.environment}"
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = 256
+  memory                   = 512
+
+  container_definitions = jsonencode([
+    {
+      name      = "${var.project_name}-worker-container"
+      image     = "${aws_ecr_repository.worker_repo.repository_url}:latest"
+      essential = true
+
+      environment = [
+        {
+          name  = "ENVIRONMENT"
+          value = var.environment
+        },
+        {
+          name  = "REDIS_URL"
+          value = "redis://${aws_elasticache_replication_group.redis.primary_endpoint_address}:6379/0"
+        }
+      ]
+
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = aws_cloudwatch_log_group.worker.name
+          "awslogs-region"        = var.aws_region
+          "awslogs-stream-prefix" = "ecs"
+        }
+      }
+    }
+  ])
+
+  tags = {
+    Name        = "${var.project_name}-worker-${var.environment}"
+    Environment = var.environment
+  }
+}
+
+# ECS service for worker
+resource "aws_ecs_service" "worker" {
+  name            = "${var.project_name}-worker-${var.environment}"
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.worker.arn
+  desired_count   = 1
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    security_groups  = [aws_security_group.ecs_tasks.id]
+    subnets          = data.aws_subnets.default.ids
+    assign_public_ip = true
+  }
+
+  tags = {
+    Name        = "${var.project_name}-worker-${var.environment}"
+    Environment = var.environment
   }
 } 

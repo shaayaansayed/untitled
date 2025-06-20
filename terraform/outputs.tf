@@ -83,3 +83,15 @@ output "backend_url" {
   description = "Backend URL (via CloudFront)"
   value       = "https://${aws_cloudfront_distribution.backend.domain_name}"
 }
+
+output "redis_endpoint" {
+  description = "Redis cluster endpoint"
+  value       = aws_elasticache_replication_group.redis.primary_endpoint_address
+  sensitive   = true
+}
+
+output "redis_url" {
+  description = "Redis connection URL"
+  value       = "redis://${aws_elasticache_replication_group.redis.primary_endpoint_address}:6379/0"
+  sensitive   = true
+}

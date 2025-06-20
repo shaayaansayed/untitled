@@ -14,8 +14,29 @@ services:
       - ENVIRONMENT=development
       - PYTHONPATH=/app
       - PYTHONUNBUFFERED=1
+      - REDIS_URL=redis://redis:6379/0
     networks:
       - app-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - app-network
+
+  worker:
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
+    volumes:
+      - ./worker:/app
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+    networks:
+      - app-network
+    depends_on:
+      - redis
 
   frontend:
     build:

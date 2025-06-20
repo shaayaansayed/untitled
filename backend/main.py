@@ -5,7 +5,7 @@ from database import Base, engine
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
-from routes import files, prior_auth, questions
+from routes import files, prior_auth, questions, tasks
 
 # Configure logging
 logging.basicConfig(
@@ -75,6 +75,7 @@ app.include_router(
 )
 app.include_router(files.router, prefix="/api/files", tags=["files"])
 app.include_router(questions.router, prefix="/api", tags=["questions"])
+app.include_router(tasks.router, prefix="/api", tags=["tasks"])
 
 
 # Custom OpenAPI schema
