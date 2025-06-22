@@ -3,7 +3,7 @@ version: "3.8"
 services:
   backend:
     build:
-      context: .
+      context: ./backend
       dockerfile: ./backend/Dockerfile
     ports:
       - "8000:8000"
@@ -25,7 +25,7 @@ services:
 
   worker:
     build:
-      context: .
+      context: ./worker
       dockerfile: ./worker/Dockerfile
     volumes:
       - ./worker:/app
