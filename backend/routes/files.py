@@ -1,3 +1,4 @@
+from celery_client import celery_client
 from database import UploadedFile, get_db
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from fastapi.responses import RedirectResponse
@@ -41,6 +42,12 @@ async def upload_file(
         db.add(db_file)
         db.commit()
         db.refresh(db_file)
+
+        if file_type == "prior_authorization":
+            _ = celery_client.send_task(
+                "tasks.process_prior_auth_document",
+                args=[db_file.id],
+            )
         return db_file
 
     except Exception as e:

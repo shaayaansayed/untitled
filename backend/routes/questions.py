@@ -1,8 +1,15 @@
 from typing import List
 
-from database import MedicalNecessityQuestion, PriorAuthorization, get_db
+from database import (
+    MedicalNecessityQuestion,
+    PriorAuthorization,
+    get_db,
+)
 from fastapi import APIRouter, Depends, HTTPException
-from schemas import MedicalNecessityQuestionResponse, QuestionAnswerUpdate
+from schemas import (
+    MedicalNecessityQuestionResponse,
+    QuestionAnswerUpdate,
+)
 from sqlalchemy.orm import Session
 
 router = APIRouter()

@@ -2,9 +2,20 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY requirements.txt .
+# Copy worker application files
+COPY worker/ .
+
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+# Make development script executable
+RUN chmod +x scripts/dev.py
 
-CMD ["celery", "-A", "celery_app", "worker", "--loglevel=info"]
+# start command with conditional logic for development vs production
+CMD ["sh", "-c", "\
+    if [ \"$CELERY_DEV_MODE\" = \"true\" ]; then \
+        python scripts/dev.py; \
+    else \
+        celery -A tasks worker --loglevel=info; \
+    fi \
+"]

@@ -1,7 +1,11 @@
 import uuid
 from typing import List, Optional
 
-from database import MedicalNecessityQuestion, PriorAuthorization, UploadedFile
+from database import (
+    MedicalNecessityQuestion,
+    PriorAuthorization,
+    UploadedFile,
+)
 from schemas import PriorAuthorizationCreate, PriorAuthorizationUpdate
 from sqlalchemy.orm import Session
 

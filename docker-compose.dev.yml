@@ -3,16 +3,14 @@ version: "3.8"
 services:
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./backend/Dockerfile
     ports:
       - "8000:8000"
     volumes:
       - ./backend:/app
-      - backend_cache:/root/.cache
     environment:
       - ENVIRONMENT=development
-      - PYTHONPATH=/app
       - PYTHONUNBUFFERED=1
       - REDIS_URL=redis://redis:6379/0
     networks:
@@ -27,11 +25,12 @@ services:
 
   worker:
     build:
-      context: ./worker
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./worker/Dockerfile
     volumes:
       - ./worker:/app
     environment:
+      - CELERY_DEV_MODE=true
       - REDIS_URL=redis://redis:6379/0
     networks:
       - app-network
