@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import Any, Dict, Optional
 
 from pydantic import BaseModel, ConfigDict
 
@@ -22,30 +22,6 @@ class UploadedFileResponse(UploadedFileBase):
     @property
     def url(self) -> str:
         return f"/api/files/{self.id}"
-
-
-class MedicalNecessityQuestionBase(BaseModel):
-    category: str
-    question: str
-    answer: Optional[str] = None
-    required: bool = True
-    question_type: str = "text"
-
-
-class MedicalNecessityQuestionCreate(MedicalNecessityQuestionBase):
-    pass
-
-
-class MedicalNecessityQuestionUpdate(BaseModel):
-    answer: str
-
-
-class MedicalNecessityQuestionResponse(MedicalNecessityQuestionBase):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: str
-    prior_auth_id: str
-    created_at: datetime
 
 
 class PriorAuthorizationBase(BaseModel):
@@ -72,12 +48,9 @@ class PriorAuthorizationResponse(PriorAuthorizationBase):
     status: str
     created_at: datetime
     updated_at: datetime
+    auth_questions: Optional[Dict[str, Any]] = None  # Added this field!
     auth_document: Optional[UploadedFileResponse] = None
     clinical_notes: Optional[UploadedFileResponse] = None
-
-
-class PriorAuthorizationDetailResponse(PriorAuthorizationResponse):
-    questions: List[MedicalNecessityQuestionResponse] = []
 
 
 class QuestionAnswerUpdate(BaseModel):

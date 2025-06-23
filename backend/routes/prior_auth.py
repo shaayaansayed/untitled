@@ -4,7 +4,6 @@ from database import get_db
 from fastapi import APIRouter, Depends, HTTPException
 from schemas import (
     PriorAuthorizationCreate,
-    PriorAuthorizationDetailResponse,
     PriorAuthorizationResponse,
     PriorAuthorizationUpdate,
 )
@@ -20,9 +19,9 @@ def get_prior_authorizations(db: Session = Depends(get_db)):
     return PriorAuthService.get_all(db)
 
 
-@router.get("/{auth_id}", response_model=PriorAuthorizationDetailResponse)
+@router.get("/{auth_id}", response_model=PriorAuthorizationResponse)
 def get_prior_authorization(auth_id: str, db: Session = Depends(get_db)):
-    """Get specific prior authorization with details"""
+    """Get a single prior authorization by ID"""
     prior_auth = PriorAuthService.get_by_id(db, auth_id)
     if not prior_auth:
         raise HTTPException(status_code=404, detail="Prior authorization not found")

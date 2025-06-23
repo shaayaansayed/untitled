@@ -3,43 +3,8 @@ import { useParams, Link } from "react-router-dom";
 import { usePriorAuth } from "../context/PriorAuthContext";
 import { apiClient } from "../config/api";
 import PDFViewer from "./PDFViewer";
-import MedicalNecessityQuestions from "./MedicalNecessityQuestions";
-import { ArrowLeftIcon } from "lucide-react";
-
-// Sample medical necessity questions (in a real app, this would come from the backend)
-const sampleQuestions = [
-  {
-    id: "1",
-    category: "Patient History",
-    question:
-      "Has the patient tried conservative treatment for at least 6 weeks?",
-    answer: "Yes",
-  },
-  {
-    id: "2",
-    category: "Patient History",
-    question: "Are there any documented physical therapy sessions?",
-    answer: "Yes - 12 sessions completed",
-  },
-  {
-    id: "3",
-    category: "Current Symptoms",
-    question: "Is there presence of neurological symptoms?",
-    answer: "Yes - Radiating pain down left leg",
-  },
-  {
-    id: "4",
-    category: "Current Symptoms",
-    question: "Pain level on a scale of 1-10?",
-    answer: "8/10",
-  },
-  {
-    id: "5",
-    category: "Imaging",
-    question: "Has an X-ray been performed in the last 3 months?",
-    answer: "Yes - Dated 2023-10-15",
-  },
-];
+import AuthQuestionsDisplay from "./AuthQuestionsDisplay";
+import { ArrowLeftIcon, RefreshCwIcon } from "lucide-react";
 
 type ViewMode = "questions" | "pdf";
 
@@ -50,36 +15,45 @@ const PriorAuthDetails: React.FC = () => {
   const [priorAuth, setPriorAuth] = useState(getPriorAuth(id || ""));
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // Fetch detailed data from API if not in context
+  // Fetch detailed data from API
+  const fetchDetails = async () => {
+    if (!id) return;
+
+    try {
+      setDetailsLoading(true);
+      setError(null);
+      const detailedAuth = await apiClient.getPriorAuthorization(id);
+      setPriorAuth(detailedAuth);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load prior authorization details"
+      );
+    } finally {
+      setDetailsLoading(false);
+    }
+  };
+
+  // Initial load
   useEffect(() => {
-    const fetchDetails = async () => {
-      if (!id) return;
+    const contextAuth = getPriorAuth(id || "");
+    if (contextAuth) {
+      setPriorAuth(contextAuth);
+    }
 
-      const contextAuth = getPriorAuth(id);
-      if (contextAuth) {
-        setPriorAuth(contextAuth);
-        return;
-      }
-
-      try {
-        setDetailsLoading(true);
-        setError(null);
-        const detailedAuth = await apiClient.getPriorAuthorization(id);
-        setPriorAuth(detailedAuth);
-      } catch (err) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Failed to load prior authorization details"
-        );
-      } finally {
-        setDetailsLoading(false);
-      }
-    };
-
+    // Always fetch fresh data from API to get latest auth_questions
     fetchDetails();
   }, [id, getPriorAuth]);
+
+  // Refresh data
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchDetails();
+    setRefreshing(false);
+  };
 
   const formatDate = (dateString: string) => {
     try {
@@ -160,6 +134,17 @@ const PriorAuthDetails: React.FC = () => {
             </span>
           </p>
         </div>
+
+        <button
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+        >
+          <RefreshCwIcon
+            className={`h-4 w-4 mr-1 ${refreshing ? "animate-spin" : ""}`}
+          />
+          Refresh
+        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-[70vh] p-4">
@@ -187,7 +172,7 @@ const PriorAuthDetails: React.FC = () => {
                     : "text-gray-500 hover:text-gray-700"
                 }`}
               >
-                Medical Necessity
+                Authorization Criteria
               </button>
               <button
                 onClick={() => setViewMode("pdf")}
@@ -203,7 +188,7 @@ const PriorAuthDetails: React.FC = () => {
           </div>
           <div className="flex-1">
             {viewMode === "questions" ? (
-              <MedicalNecessityQuestions questions={sampleQuestions} />
+              <AuthQuestionsDisplay authQuestions={priorAuth.auth_questions} />
             ) : priorAuth.auth_document ? (
               <PDFViewer
                 fileUrl={getFileUrl(priorAuth.auth_document.id)}

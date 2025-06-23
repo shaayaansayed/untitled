@@ -2,7 +2,7 @@ import os
 
 import boto3
 from botocore.exceptions import ClientError, NoCredentialsError
-from config.settings import settings
+from settings import settings
 
 
 class FileService:

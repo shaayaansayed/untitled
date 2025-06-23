@@ -9,3 +9,4 @@ watchdog
 boto3
 instructor
 anthropic
+pgvector

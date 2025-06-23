@@ -1,8 +1,9 @@
 import os
 
 from dotenv import load_dotenv
+from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
-    Boolean,
+    JSON,
     Column,
     DateTime,
     ForeignKey,
@@ -10,6 +11,7 @@ from sqlalchemy import (
     String,
     Text,
     create_engine,
+    text,
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
@@ -38,10 +40,14 @@ class PriorAuthorization(Base):
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
+    auth_questions = Column(JSON, nullable=False)
+
     # Relationships
     auth_document = relationship("UploadedFile", foreign_keys=[auth_document_id])
     clinical_notes = relationship("UploadedFile", foreign_keys=[clinical_notes_id])
-    questions = relationship("MedicalNecessityQuestion", back_populates="prior_auth")
+    document_chunks = relationship(
+        "DocumentChunk", back_populates="prior_authorization"
+    )
 
 
 class UploadedFile(Base):
@@ -56,24 +62,50 @@ class UploadedFile(Base):
     upload_date = Column(DateTime, default=func.now())
 
 
-class MedicalNecessityQuestion(Base):
-    __tablename__ = "medical_necessity_questions"
+class DocumentChunk(Base):
+    __tablename__ = "document_chunks"
 
     id = Column(String, primary_key=True, index=True)
-    prior_auth_id = Column(String, ForeignKey("prior_authorizations.id"))
-    category = Column(String, nullable=False)
-    question = Column(Text, nullable=False)
-    answer = Column(Text, nullable=True)
-    required = Column(Boolean, default=True)
-    question_type = Column(String, default="text")  # text, boolean, multiple_choice
+    prior_authorization_id = Column(
+        String, ForeignKey("prior_authorizations.id"), nullable=False
+    )
+    file_id = Column(String, ForeignKey("uploaded_files.id"), nullable=False)
+    chunk_index = Column(Integer, nullable=False)  # Order of chunk in document
+    content = Column(Text, nullable=False)  # The actual text content
+    chunk_metadata = Column(JSON)  # Additional metadata (page number, section, etc.)
+
+    # Vector embedding (1536 dimensions for OpenAI text-embedding-ada-002)
+    # Adjust dimensions based on your embedding model
+    embedding = Column(Vector(1536))
+
     created_at = Column(DateTime, default=func.now())
 
     # Relationships
-    prior_auth = relationship("PriorAuthorization", back_populates="questions")
+    prior_authorization = relationship(
+        "PriorAuthorization", back_populates="document_chunks"
+    )
+    file = relationship("UploadedFile")
+
+    def __repr__(self):
+        return f"<DocumentChunk(id={self.id}, chunk_index={self.chunk_index})>"
 
 
-# Create tables
-Base.metadata.create_all(bind=engine)
+def setup_pgvector_extension():
+    """Setup pgvector extension in the database"""
+    with engine.connect() as conn:
+        # Enable the vector extension
+        conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+        conn.commit()
+
+
+# Create tables and setup pgvector
+def initialize_database():
+    """Initialize database with tables and extensions"""
+    setup_pgvector_extension()
+    Base.metadata.create_all(bind=engine)
+
+
+initialize_database()
 
 
 # Dependency to get DB session

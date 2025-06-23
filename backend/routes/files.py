@@ -1,4 +1,3 @@
-from celery_client import celery_client
 from database import UploadedFile, get_db
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from fastapi.responses import RedirectResponse
@@ -43,11 +42,8 @@ async def upload_file(
         db.commit()
         db.refresh(db_file)
 
-        if file_type == "prior_authorization":
-            _ = celery_client.send_task(
-                "tasks.process_prior_auth_document",
-                args=[db_file.id],
-            )
+        print(f"✓ Uploaded {file_type} file: {file.filename} -> {file_id}")
+
         return db_file
 
     except Exception as e:
@@ -72,18 +68,9 @@ def get_file(file_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Failed to access file: {str(e)}")
 
 
-@router.delete("/{file_id}")
-def delete_file(file_id: str, db: Session = Depends(get_db)):
-    """Delete file from both S3 and database"""
-    db_file = db.query(UploadedFile).filter(UploadedFile.id == file_id).first()
-    if not db_file:
-        raise HTTPException(status_code=404, detail="File not found")
-
-    # Delete from S3
-    file_service.delete_file(db_file.file_path)
-
-    # Delete from database
-    db.delete(db_file)
-    db.commit()
-
-    return {"message": "File deleted successfully"}
+@router.get("", response_model=list[UploadedFileResponse])
+def list_files(db: Session = Depends(get_db)):
+    """
+    List all uploaded files
+    """
+    return db.query(UploadedFile).all()

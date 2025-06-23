@@ -1,8 +1,28 @@
-// API configuration
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
 export { API_BASE_URL };
+
+// Auth questions structure from the backend
+export interface AuthCriterion {
+  id: string;
+  operator: null;
+  description: string;
+  statement: string;
+  value: boolean | null;
+  type: "criterion";
+}
+
+export interface AuthOperation {
+  id: string;
+  operator: "and" | "or" | "not";
+  description: string;
+  children: (AuthCriterion | AuthOperation)[];
+  value: boolean | null;
+  type: "operation";
+}
+
+export type AuthQuestion = AuthCriterion | AuthOperation;
 
 export interface PriorAuth {
   id: string;
@@ -12,6 +32,7 @@ export interface PriorAuth {
   status: string;
   created_at: string;
   updated_at: string;
+  auth_questions?: AuthQuestion; // The root of the question structure
   auth_document?: {
     id: string;
     filename: string;

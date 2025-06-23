@@ -5,7 +5,7 @@ from database import Base, engine
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
-from routes import files, prior_auth, questions, tasks
+from routes import files, prior_auth, tasks
 
 # Configure logging
 logging.basicConfig(
@@ -25,7 +25,6 @@ app = FastAPI(
     ### Features:
     - **Prior Authorizations**: Create, read, update, and delete prior authorization requests
     - **File Management**: Upload and manage PDF documents using AWS S3
-    - **Medical Necessity Questions**: Handle medical necessity questionnaires
     
     ### Authentication:
     Currently, this API does not require authentication for development purposes.
@@ -38,7 +37,6 @@ app = FastAPI(
     ### API Endpoints:
     - `/api/prior-authorizations` - Manage prior authorization requests
     - `/api/files` - Handle file uploads and downloads
-    - `/api/prior-authorizations/{id}/questions` - Manage medical necessity questions
     """,
     version="1.0.0",
     docs_url="/docs",
@@ -74,7 +72,6 @@ app.include_router(
     prior_auth.router, prefix="/api/prior-authorizations", tags=["prior-authorizations"]
 )
 app.include_router(files.router, prefix="/api/files", tags=["files"])
-app.include_router(questions.router, prefix="/api", tags=["questions"])
 app.include_router(tasks.router, prefix="/api", tags=["tasks"])
 
 

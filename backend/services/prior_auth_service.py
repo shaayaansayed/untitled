@@ -1,11 +1,8 @@
 import uuid
 from typing import List, Optional
 
-from database import (
-    MedicalNecessityQuestion,
-    PriorAuthorization,
-    UploadedFile,
-)
+from celery_client import celery_client
+from database import PriorAuthorization, UploadedFile
 from schemas import PriorAuthorizationCreate, PriorAuthorizationUpdate
 from sqlalchemy.orm import Session
 
@@ -44,48 +41,30 @@ class PriorAuthService:
         if not auth_doc or not clinical_notes:
             raise ValueError("Referenced files not found")
 
+        # Create the prior authorization with empty auth_questions initially
         db_prior_auth = PriorAuthorization(
-            id=PriorAuthService.generate_id(), **prior_auth.model_dump()
+            id=PriorAuthService.generate_id(),
+            auth_questions={},  # Initialize as empty, will be populated by worker
+            **prior_auth.model_dump(),
         )
 
-        # Add default medical necessity questions
-        default_questions = [
-            {
-                "category": "Patient History",
-                "question": "Has the patient tried conservative treatment for at least 6 weeks?",
-            },
-            {
-                "category": "Patient History",
-                "question": "Are there any documented physical therapy sessions?",
-            },
-            {
-                "category": "Current Symptoms",
-                "question": "Is there presence of neurological symptoms?",
-            },
-            {
-                "category": "Current Symptoms",
-                "question": "Pain level on a scale of 1-10?",
-            },
-            {
-                "category": "Imaging",
-                "question": "Has an X-ray been performed in the last 3 months?",
-            },
-        ]
-
         db.add(db_prior_auth)
-        db.flush()  # Get the ID
-
-        # Add questions
-        for q_data in default_questions:
-            question = MedicalNecessityQuestion(
-                id=PriorAuthService.generate_id(),
-                prior_auth_id=db_prior_auth.id,
-                **q_data,
-            )
-            db.add(question)
-
+        db.flush()  # Get the ID without committing
         db.commit()
         db.refresh(db_prior_auth)
+
+        # Trigger async processing of the prior authorization using chains
+        try:
+            result = celery_client.send_task(
+                "tasks.start_processing_workflow", args=[db_prior_auth.id]
+            )
+            print(
+                f"✓ Queued processing workflow for prior auth {db_prior_auth.id} (task ID: {result.id})"
+            )
+        except Exception as e:
+            print(f"⚠ Failed to queue processing workflow: {str(e)}")
+            # Don't fail the creation if task queueing fails
+
         return db_prior_auth
 
     @staticmethod

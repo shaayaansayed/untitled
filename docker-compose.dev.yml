@@ -4,7 +4,7 @@ services:
   backend:
     build:
       context: ./backend
-      dockerfile: ./backend/Dockerfile
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
     volumes:
@@ -26,7 +26,7 @@ services:
   worker:
     build:
       context: ./worker
-      dockerfile: ./worker/Dockerfile
+      dockerfile: Dockerfile
     volumes:
       - ./worker:/app
     environment:
