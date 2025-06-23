@@ -1,7 +1,8 @@
 import asyncio
 
 from celery import Celery, chain
-from database import PriorAuthorization, SessionLocal, UploadedFile
+from celery.signals import worker_process_init
+from database import PriorAuthorization, SessionLocal, UploadedFile, engine
 from llm import run_batch_completions
 from pydantic import BaseModel, Field
 from services.auth_service import (
@@ -22,6 +23,13 @@ app.conf.result_backend = settings.REDIS_URL
 class CriterionAnswer(BaseModel):
     answer: str = Field(..., description="YES, NO, or UNCLEAR")
     explanation: str = Field(..., description="Brief explanation for the decision")
+
+
+@worker_process_init.connect
+def init_worker(**kwargs):
+    """Initialize worker process - dispose database connections from parent"""
+    print("🔄 Initializing worker process - disposing parent database connections")
+    engine.dispose()
 
 
 @app.task
