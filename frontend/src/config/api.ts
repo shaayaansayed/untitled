@@ -4,12 +4,18 @@ const API_BASE_URL =
 export { API_BASE_URL };
 
 // Auth questions structure from the backend
+export interface AuthCriterionValue {
+  is_met: boolean;
+  justification?: string;
+  answer?: string;
+}
+
 export interface AuthCriterion {
   id: string;
   operator: null;
   description: string;
   statement: string;
-  value: boolean | null;
+  value: boolean | null | AuthCriterionValue;
   type: "criterion";
 }
 
