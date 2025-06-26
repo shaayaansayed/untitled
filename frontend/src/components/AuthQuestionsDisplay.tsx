@@ -21,14 +21,20 @@ const AuthQuestionsDisplay: React.FC<AuthQuestionsDisplayProps> = ({
     if (question.type === "criterion") {
       const criterion = question as AuthCriterion;
 
-      // Determine icon based on value
+      // Determine icon based on value - FIXED: Check is_met property
       let icon;
       let titleColor = "";
 
-      if (criterion.value === true) {
+      // Handle both old format (boolean) and new format (object with is_met)
+      const isMet =
+        typeof criterion.value === "boolean"
+          ? criterion.value
+          : criterion.value?.is_met;
+
+      if (isMet === true) {
         icon = <CheckCircleOutlined style={{ color: "#52c41a" }} />;
         titleColor = "text-green-700";
-      } else if (criterion.value === false) {
+      } else if (isMet === false) {
         icon = <CloseCircleOutlined style={{ color: "#ff4d4f" }} />;
         titleColor = "text-red-700";
       } else {
@@ -42,6 +48,17 @@ const AuthQuestionsDisplay: React.FC<AuthQuestionsDisplayProps> = ({
           <span className={`flex items-center gap-2 ${titleColor}`}>
             {icon}
             <span>{criterion.description}</span>
+            {/* Optional: Show justification on hover or as subtitle */}
+            {criterion.value &&
+              typeof criterion.value === "object" &&
+              criterion.value.justification && (
+                <span
+                  className="text-xs text-gray-400 ml-2"
+                  title={criterion.value.justification}
+                >
+                  ({criterion.value.answer})
+                </span>
+              )}
           </span>
         ),
         isLeaf: true,
@@ -69,13 +86,23 @@ const AuthQuestionsDisplay: React.FC<AuthQuestionsDisplayProps> = ({
     };
   };
 
-  // Count criteria and check completion status
+  // Count criteria and check completion status - FIXED: Check is_met property
   const countStats = (
     question: AuthQuestion
   ): { total: number; completed: number; met: number } => {
     if (question.type === "criterion") {
-      const completed = question.value !== null ? 1 : 0;
-      const met = question.value === true ? 1 : 0;
+      const hasValue = question.value !== null && question.value !== undefined;
+      const completed = hasValue ? 1 : 0;
+
+      // Handle both old format (boolean) and new format (object with is_met)
+      let isMet = false;
+      if (typeof question.value === "boolean") {
+        isMet = question.value;
+      } else if (question.value && typeof question.value === "object") {
+        isMet = question.value.is_met === true;
+      }
+
+      const met = isMet ? 1 : 0;
       return { total: 1, completed, met };
     }
 

@@ -6,6 +6,8 @@ from database import PriorAuthorization, UploadedFile
 from schemas import PriorAuthorizationCreate, PriorAuthorizationUpdate
 from sqlalchemy.orm import Session
 
+from services.file_service import FileService
+
 
 class PriorAuthService:
     @staticmethod
@@ -89,6 +91,29 @@ class PriorAuthService:
         if not db_prior_auth:
             return False
 
+        file_service = FileService()
+
+        # Get the associated files
+        auth_document = db_prior_auth.auth_document
+        clinical_notes = db_prior_auth.clinical_notes
+
+        # Delete the prior authorization record
         db.delete(db_prior_auth)
+
+        # Delete the uploaded file records
+        files_to_delete = []
+        if auth_document:
+            files_to_delete.append(auth_document)
+            db.delete(auth_document)
+        if clinical_notes:
+            files_to_delete.append(clinical_notes)
+            db.delete(clinical_notes)
+
+        # Commit database changes
         db.commit()
+
+        # Delete files from S3 (done after DB commit to avoid inconsistency)
+        for file_record in files_to_delete:
+            file_service.delete_file(file_record.file_path)
+
         return True

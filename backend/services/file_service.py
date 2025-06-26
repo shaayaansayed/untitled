@@ -83,3 +83,12 @@ class FileService:
             raise HTTPException(
                 status_code=500, detail=f"Failed to generate presigned URL: {str(e)}"
             )
+
+    def delete_file(self, s3_key: str) -> bool:
+        """Delete a file from S3"""
+        try:
+            self.s3_client.delete_object(Bucket=self.bucket_name, Key=s3_key)
+            return True
+        except ClientError as e:
+            print(f"Failed to delete file from S3: {str(e)}")
+            return False
